@@ -24,14 +24,13 @@ pipeline {
             }
             steps {
                 sh '''
-                  export CI=false
                   npm install
-                  npm run build
+                  CI=false npm run build
                 '''
             }
         }
 
-        stage('Docker Build') {
+        stage('Build Docker Image') {
             steps {
                 sh 'docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .'
             }
@@ -65,6 +64,15 @@ pipeline {
                     ${DOCKER_IMAGE}:${DOCKER_TAG}
                 '''
             }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ CI/CD berhasil'
+        }
+        failure {
+            echo '❌ CI/CD gagal'
         }
     }
 }
