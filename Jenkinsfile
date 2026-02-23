@@ -2,48 +2,64 @@ pipeline {
     agent any
 
     environment {
-        APP_NAME = "literature-frontend"
-        DOCKER_IMAGE = "literature-frontend:latest"
+        DOCKER_IMAGE = "elilaura/literature-frontend"
+        DOCKER_TAG = "v1.0.0"
         CONTAINER_NAME = "literature-frontend"
-        PORT = "3000"
     }
 
     stages {
 
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
                 checkout scm
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Build App') {
             steps {
                 sh 'npm install'
-            }
-        }
-
-        stage('Build Frontend') {
-            steps {
                 sh 'npm run build'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Docker Build') {
             steps {
                 sh '''
-                docker build -t $DOCKER_IMAGE .
+                docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
                 '''
             }
         }
 
-        stage('Deploy Docker Container') {
+        stage('Docker Login') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                    '''
+                }
+            }
+        }
+
+        stage('Docker Push') {
+            steps {
+                sh '''
+                docker push $DOCKER_IMAGE:$DOCKER_TAG
+                '''
+            }
+        }
+
+        stage('Deploy Container') {
             steps {
                 sh '''
                 docker rm -f $CONTAINER_NAME || true
                 docker run -d \
                   --name $CONTAINER_NAME \
-                  -p $PORT:80 \
-                  $DOCKER_IMAGE
+                  -p 3000:80 \
+                  $DOCKER_IMAGE:$DOCKER_TAG
                 '''
             }
         }
@@ -51,10 +67,10 @@ pipeline {
 
     post {
         success {
-            echo 'CI/CD pipeline berhasil'
+            echo 'CI/CD berhasil: build → push → deploy 🚀'
         }
         failure {
-            echo 'CI/CD pipeline gagal'
+            echo 'CI/CD gagal ❌'
         }
     }
 }
