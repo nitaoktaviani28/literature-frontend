@@ -1,0 +1,9 @@
+version: "3.8"
+
+services:
+  frontend:
+    image: haechanlovelove/literature-frontend:v1.0.0
+    container_name: literature-frontend
+    ports:
+      - "3000:3000"
+    restart: always
