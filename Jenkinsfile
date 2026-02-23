@@ -4,7 +4,6 @@ pipeline {
     environment {
         DOCKER_IMAGE   = "haechanlovelove/literature-frontend"
         DOCKER_TAG     = "v1.0.0"
-        CONTAINER_NAME = "literature-frontend"
     }
 
     stages {
@@ -54,14 +53,12 @@ pipeline {
             }
         }
 
-        stage('Deploy Container') {
+        stage('Deploy with Docker Compose') {
             steps {
                 sh '''
-                  docker rm -f ${CONTAINER_NAME} || true
-                  docker run -d \
-                    --name ${CONTAINER_NAME} \
-                    -p 3000:3000 \
-                    ${DOCKER_IMAGE}:${DOCKER_TAG}
+                  docker compose down || true
+                  docker compose pull
+                  docker compose up -d
                 '''
             }
         }
@@ -69,7 +66,7 @@ pipeline {
 
     post {
         success {
-            echo '✅ CI/CD berhasil'
+            echo '✅ CI/CD berhasil (Docker Compose)'
         }
         failure {
             echo '❌ CI/CD gagal'
