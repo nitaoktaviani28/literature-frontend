@@ -16,16 +16,24 @@ pipeline {
         }
 
         stage('Build App') {
+            agent {
+                docker {
+                    image 'node:14-alpine'
+                    args '-u root'
+                }
+            }
             steps {
-                sh 'npm install'
-                sh 'npm run build'
+                sh '''
+                  npm install
+                  npm run build
+                '''
             }
         }
 
         stage('Docker Build') {
             steps {
                 sh '''
-                docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
+                  docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
                 '''
             }
         }
@@ -38,7 +46,7 @@ pipeline {
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
                     sh '''
-                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                      echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
                     '''
                 }
             }
@@ -47,7 +55,7 @@ pipeline {
         stage('Docker Push') {
             steps {
                 sh '''
-                docker push $DOCKER_IMAGE:$DOCKER_TAG
+                  docker push $DOCKER_IMAGE:$DOCKER_TAG
                 '''
             }
         }
@@ -55,11 +63,11 @@ pipeline {
         stage('Deploy Container') {
             steps {
                 sh '''
-                docker rm -f $CONTAINER_NAME || true
-                docker run -d \
-                  --name $CONTAINER_NAME \
-                  -p 3000:80 \
-                  $DOCKER_IMAGE:$DOCKER_TAG
+                  docker rm -f $CONTAINER_NAME || true
+                  docker run -d \
+                    --name $CONTAINER_NAME \
+                    -p 3000:3000 \
+                    $DOCKER_IMAGE:$DOCKER_TAG
                 '''
             }
         }
