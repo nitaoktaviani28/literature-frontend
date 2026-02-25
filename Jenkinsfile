@@ -14,16 +14,6 @@ pipeline {
             }
         }
 
-        stage('Build React App') {
-            steps {
-                sh '''
-                  node -v || echo "Node belum terinstall"
-                  npm install
-                  CI=false npm run build
-                '''
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 sh '''
@@ -67,7 +57,7 @@ pipeline {
 
     post {
         success {
-            echo '✅ CI/CD berhasil (Docker Compose)'
+            echo '✅ CI/CD berhasil (Docker only)'
         }
         failure {
             echo '❌ CI/CD gagal'
