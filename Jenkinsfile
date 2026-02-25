@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE   = "haechanlovelove/literature-frontend"
-        DOCKER_TAG     = "v1.0.0"
+        DOCKER_IMAGE = "haechanlovelove/literature-frontend"
+        DOCKER_TAG   = "v1.0.0"
     }
 
     stages {
@@ -15,14 +15,9 @@ pipeline {
         }
 
         stage('Build React App') {
-            agent {
-                docker {
-                    image 'node:14-alpine'
-                    args '-u root'
-                }
-            }
             steps {
                 sh '''
+                  node -v || echo "Node belum terinstall"
                   npm install
                   CI=false npm run build
                 '''
@@ -31,7 +26,9 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .'
+                sh '''
+                  docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                '''
             }
         }
 
@@ -42,14 +39,18 @@ pipeline {
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
-                    sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
+                    sh '''
+                      echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                    '''
                 }
             }
         }
 
         stage('Docker Push') {
             steps {
-                sh 'docker push ${DOCKER_IMAGE}:${DOCKER_TAG}'
+                sh '''
+                  docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+                '''
             }
         }
 
